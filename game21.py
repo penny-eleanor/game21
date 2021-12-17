@@ -78,6 +78,10 @@ def get_players():
         else:
             print('Invalid input: Please enter a value')
 
+    print(LINE_LENGTH * '=')
+    print('\t\t Starting game...')
+    print(LINE_LENGTH * '=')
+
     return players
 
 
@@ -111,8 +115,8 @@ def setup_new_round(players):
     """
     for player_name, player_info in players.items():
         player_info['cards'] = []  # initialize the player's hand as being empty
-        player_info['cards_total'] = 0  # initialize the player's hand as having a total of 0 cards
-        player_info['bet'] = 0.25  # each player's current bet starts off at 25 cents
+        player_info['cards_total'] = 0  # initialize the player's hand as having a total value of 0
+        player_info['bet'] = 0.25  # each player's current bet starts off undoubled at 25 cents
 
 
 def deal_card(player_info):
@@ -129,6 +133,20 @@ def deal_card(player_info):
     card = random.randint(1, 10)  # get a random number between 1 and 10 inclusive
     player_info['cards'].append(card)  # add the card to the player's list of cards
     player_info['cards_total'] += card  # add the card value to the player's cards_total
+
+
+def double_bet(player_info):
+    """
+    deal_card(player_info)
+    Does the following three items:
+        Generate a random number between 1-10
+        add it to the card to the list of cards
+        add the card value to the cards total
+
+    :param player_info: 2D dictionary of all players' data
+    :return: n/a
+    """
+    player_info['bet'].update(0.50)  # ups the player's bet to 50 cents
 
 
 def deal_to_players(players):
@@ -160,6 +178,20 @@ def deal_to_players(players):
         cash, cards, cards_total, bet = player_info.values()
         display_cards(cards)
 
+        another_card = 'y'
+        while another_card == 'y':
+            another_card = get_yn_input(prompt=" Do you want another card? (y/n): ")
+            deal_card(player_info)
+
+            cash, cards, cards_total, bet = player_info.values()
+            display_cards(cards)
+
+        print(' ', player_name, 'holds at ', cards_total)
+        double_prompt = get_yn_input(prompt=" Do you want double your 25 cent bet? (y/n): ")
+        if double_prompt == 'y':
+            double_bet(player_info)
+        print()
+
 
 def deal_to_dealer(players):
     """
@@ -175,7 +207,7 @@ def deal_to_dealer(players):
     highest_hand = 0
 
     # need to determine if there are any players still in the round or if they all exceeded 21
-    for player, player_info in players.items(): # get the player_name (key) and player_info (value)
+    for player, player_info in players.items():  # get the player_name (key) and player_info (value)
         cards_total = player_info['cards_total']
         if cards_total > 21:
             num_players_out += 1
@@ -197,10 +229,16 @@ def deal_to_dealer(players):
     # ... the dealer beats all players
     # ... the dealer reaches 21
     # ... the dealer exceeds 21
-    while True:
-        card = random.randint(1,10)
+    while dealer_cards_total <= 21 or dealer_cards_total >= highest_hand:
+        card = random.randint(1, 10)
         dealer_cards.append(card)
         dealer_cards_total += card
+
+    display_cards(dealer_cards)
+    if dealer_cards_total <= 21:
+        print(' Dealer\'s hand exceeded 21')
+    elif dealer_cards_total >= highest_hand:
+        print(' Dealer holds at ', dealer_cards_total)
 
 
 def display_cards(cards):
@@ -260,4 +298,7 @@ def display_round_summary(players):
 
         cash, cards, cards_total, bet = player_info.values()
 
-        print('$ ', cash, '\t', player_name, '\'s balance')
+        if cash >= .25:
+            print('$ ', cash, '\t', player_name, '\'s balance')
+        else:
+            print(player_name, 'is flat broke.')
