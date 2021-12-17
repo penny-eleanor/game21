@@ -57,6 +57,10 @@ def play_game():
     """
 
     while True:
+        game.display_game_intro()
+        players = game.get_players()
+        game.play_round(players)
+
         break
     print("later skater")
     input('Press the enter key to continue...')

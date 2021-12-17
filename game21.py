@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+LINE_LENGTH = 28
+
+
 def get_yn_input(prompt):
     """
     get_yn_input(prompt)
@@ -8,6 +11,13 @@ def get_yn_input(prompt):
     :param prompt:
     :return: the user's response (y/n)
     """
+    # prompt = message that goes before the user prompt when called.
+    while True:
+        user_input = input(f'{prompt}')
+        if user_input == 'y' or user_input == 'n':
+            return user_input
+        else:
+            print('Please enter a valid response (y/n).')
 
 
 def display_game_intro():
@@ -17,6 +27,21 @@ def display_game_intro():
 
     :return: n/a
     """
+    print(LINE_LENGTH * '=')
+    print('\t\t ~*~ Welcome to Game 21 ~*~')
+    print(LINE_LENGTH * '=')
+    print('The rules are simple!')
+    print('\t1. Each player is trying to get as close to 21 without going over.')
+    print('\t2. Each player is ONLY trying to beat the dealer\'s hand.')
+    print('\t3. The dealer will keep dealing himself cards until he beats all players hands or goes over 21.')
+    print('\t4. Tie goes to the player, not the dealer.')
+    print('\t5. Each player gets dealt two card between 1 - 10.')
+    print('\t6. The player then can choose to receive additional cards.')
+    print('\t7. Each player starts with $1.00.')
+    print('\t8. Default bet is 25 cents, but the player can double it after holding.')
+    print('\t9. Winner is the last person with cash, not including the dealer.')
+    print('\t10. Have fun! :)')
+    print(LINE_LENGTH * '-')
 
 
 def get_players():
@@ -29,8 +54,29 @@ def get_players():
         set cards_total to 0
         set bet to 0.25 default value
 
-    :return: n/a
+    :return: 2D dictionary of all players' data
     """
+    players = {}
+
+    print('Who\'s all playing?')
+    print('Enter each player\'s name, and enter \'done\' when finished.')
+
+    while True:
+        player_name = input('Enter name: ')
+
+        if player_name > '':
+            players[player_name] = {
+                'cash': 1.0,
+                'cards': [],
+                'cards_total': 0,
+                'bet': 0.25
+            }
+        elif player_name == 'done':
+            break
+        else:
+            print('Invalid input: Please enter a value')
+
+    return players
 
 
 def play_round(players):
@@ -44,13 +90,16 @@ def play_round(players):
     :param players: 2D dictionary of all players' data
     :return: n/a
     """
+    setup_new_round(players)
+    deal_to_players(players)
+    dealer_cards_total = deal_to_dealer(players)
+    display_winners(players, dealer_cards_total)
 
 
 def setup_new_round(players):
     """
     setup_new_round(players)
     Reset all player's data for the next round.
-        set cash to $1.0
         set cards to an empty list
         set cards_total to 0
         set bet to 0.25 default value
@@ -58,6 +107,10 @@ def setup_new_round(players):
     :param players: 2D dictionary of all players' data
     :return: n/a
     """
+    for player_name, player_info in players.items():
+        player_info['cards'] = []  # initialize the player's hand as being empty
+        player_info['cards_total'] = 0  # initialize the player's hand as having a total of 0 cards
+        player_info['bet'] = 0.25  # each player's current bet starts off at 25 cents
 
 
 def deal_card(player_info):
