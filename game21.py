@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import random
+
 LINE_LENGTH = 28
 
 
@@ -124,6 +126,9 @@ def deal_card(player_info):
     :param player_info: 2D dictionary of all players' data
     :return: n/a
     """
+    card = random.randint(1, 10)  # get a random number between 1 and 10 inclusive
+    player_info['cards'].append(card)  # add the card to the player's list of cards
+    player_info['cards_total'] += card  # add the card value to the player's cards_total
 
 
 def deal_to_players(players):
@@ -139,6 +144,21 @@ def deal_to_players(players):
     :param players: 2D dictionary of all players' data
     :return: n/a
     """
+    for player_name, player_info in players.items():
+        cash, cards, cards_total, bet = player_info.values()
+
+        if cash < 0.25:
+            continue
+
+        print('Dealing to ' + player_name)
+
+        # deal the first two cards to the current player
+        deal_card(player_info)
+        deal_card(player_info)
+
+        # unpack the sub dictionary again - the player's cards have changed
+        cash, cards, cards_total, bet = player_info.values()
+        display_cards(cards)
 
 
 def deal_to_dealer(players):
@@ -151,6 +171,36 @@ def deal_to_dealer(players):
     :param players: 2D dictionary of all players' data
     :return: n/a
     """
+    num_players_out = 0
+    highest_hand = 0
+
+    # need to determine if there are any players still in the round or if they all exceeded 21
+    for player, player_info in players.items(): # get the player_name (key) and player_info (value)
+        cards_total = player_info['cards_total']
+        if cards_total > 21:
+            num_players_out += 1
+        elif cards_total > highest_hand:
+            highest_hand = cards_total
+
+    # if there are no players left in this round
+    # then there is no point dealing to the dealer, because the dealer automatically wins
+    if num_players_out == len(players):
+        return 21  # returning 21 will make the dealer automatically win
+
+    # if there are still players in the round, we deal to the dealer
+    print('Dealing to dealer.')
+
+    dealer_cards = []
+    dealer_cards_total = 0
+
+    # deal to the dealer one card at a time until...
+    # ... the dealer beats all players
+    # ... the dealer reaches 21
+    # ... the dealer exceeds 21
+    while True:
+        card = random.randint(1,10)
+        dealer_cards.append(card)
+        dealer_cards_total += card
 
 
 def display_cards(cards):
@@ -161,6 +211,10 @@ def display_cards(cards):
     :param cards: one player's current cards
     :return: n/a
     """
+    print(' Cards: ', end='')
+    for card in cards:
+        print(str(card) + ' ', end='')
+    print()
 
 
 def display_winners(players, dealer_cards_total):
@@ -172,6 +226,22 @@ def display_winners(players, dealer_cards_total):
     :param dealer_cards_total: the dealer's card total
     :return:
     """
+    total_winners = 0  # used to determine if the dealer is the automatic winner
+
+    for player_name, player_info in players.items():  # get the player_name (key) and player_info (value)
+
+        cash, cards, cards_total, bet = player_info.values()  # unpack the current player's data
+
+        if cash < 0.25:  # player is out of the game because they are broke
+            continue
+
+        if dealer_cards_total > 21:  # dealer exceeded 21
+            if cards_total <= 21:  # as long as the player is still in the game
+                total_winners += 1
+                player_info['cash'] += bet  # player won, add their bet to their cash
+                print(player_name, 'won!')
+            else:
+                player_info['cash'] -= bet  # player lost, subtract their bet from their cash
 
 
 def display_round_summary(players):
@@ -182,3 +252,12 @@ def display_round_summary(players):
     :param players: 2D dictionary of all players' data
     :return: the number of players who still have cash
     """
+    print(LINE_LENGTH * '-')
+    print('\t End of Round Summary')
+    print(LINE_LENGTH * '-')
+
+    for player_name, player_info in players.items():  # get the player_name (key) and player_info (value)
+
+        cash, cards, cards_total, bet = player_info.values()
+
+        print('$ ', cash, '\t', player_name, '\'s balance')
