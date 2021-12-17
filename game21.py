@@ -2,7 +2,7 @@
 
 import random
 
-LINE_LENGTH = 28
+LINE_LENGTH = 40
 
 
 def get_yn_input(prompt):
@@ -66,7 +66,7 @@ def get_players():
     while True:
         player_name = input('Enter name: ')
 
-        if player_name > '':
+        if player_name > '' and player_name != 'done':
             players[player_name] = {
                 'cash': 1.0,
                 'cards': [],
@@ -138,15 +138,12 @@ def deal_card(player_info):
 def double_bet(player_info):
     """
     deal_card(player_info)
-    Does the following three items:
-        Generate a random number between 1-10
-        add it to the card to the list of cards
-        add the card value to the cards total
+    Doubles the player's bet from 0.25 to 0.50
 
     :param player_info: 2D dictionary of all players' data
     :return: n/a
     """
-    player_info['bet'].update(0.50)  # ups the player's bet to 50 cents
+    player_info['bet'] = 0.50  # sets the player's bet to 50 cents
 
 
 def deal_to_players(players):
@@ -178,15 +175,15 @@ def deal_to_players(players):
         cash, cards, cards_total, bet = player_info.values()
         display_cards(cards)
 
-        another_card = 'y'
+        another_card = get_yn_input(prompt=" Do you want another card? (y/n): ")
         while another_card == 'y':
-            another_card = get_yn_input(prompt=" Do you want another card? (y/n): ")
             deal_card(player_info)
 
             cash, cards, cards_total, bet = player_info.values()
             display_cards(cards)
+            another_card = get_yn_input(prompt=" Do you want another card? (y/n): ")
 
-        print(' ', player_name, 'holds at ', cards_total)
+        print(' ', player_name, 'holds at', cards_total)
         double_prompt = get_yn_input(prompt=" Do you want double your 25 cent bet? (y/n): ")
         if double_prompt == 'y':
             double_bet(player_info)
@@ -201,7 +198,7 @@ def deal_to_dealer(players):
     Otherwise start dealing to the dealer until he beats all players or reaches 21
 
     :param players: 2D dictionary of all players' data
-    :return: n/a
+    :return: dealer_cards_total: total value of dealer's hand
     """
     num_players_out = 0
     highest_hand = 0
@@ -229,16 +226,19 @@ def deal_to_dealer(players):
     # ... the dealer beats all players
     # ... the dealer reaches 21
     # ... the dealer exceeds 21
-    while dealer_cards_total <= 21 or dealer_cards_total >= highest_hand:
+    while True:
         card = random.randint(1, 10)
         dealer_cards.append(card)
         dealer_cards_total += card
 
-    display_cards(dealer_cards)
-    if dealer_cards_total <= 21:
-        print(' Dealer\'s hand exceeded 21')
-    elif dealer_cards_total >= highest_hand:
-        print(' Dealer holds at ', dealer_cards_total)
+        if dealer_cards_total > 21:
+            display_cards(dealer_cards)
+            print(' Dealer\'s hand exceeded 21')
+            return dealer_cards_total
+        elif dealer_cards_total >= highest_hand:
+            display_cards(dealer_cards)
+            print(' Dealer holds at', dealer_cards_total)
+            return dealer_cards_total
 
 
 def display_cards(cards):
@@ -261,7 +261,7 @@ def display_winners(players, dealer_cards_total):
     Display the winners for the current round
 
     :param players: 2D dictionary of all players' data
-    :param dealer_cards_total: the dealer's card total
+    :param dealer_cards_total: total value of dealer's hand
     :return:
     """
     total_winners = 0  # used to determine if the dealer is the automatic winner
@@ -277,9 +277,11 @@ def display_winners(players, dealer_cards_total):
             if cards_total <= 21:  # as long as the player is still in the game
                 total_winners += 1
                 player_info['cash'] += bet  # player won, add their bet to their cash
-                print(player_name, 'won!')
+                print('$', player_name, 'won! $')
             else:
                 player_info['cash'] -= bet  # player lost, subtract their bet from their cash
+        else:
+            player_info['cash'] -= bet  # player lost, subtract their bet from their cash
 
 
 def display_round_summary(players):
@@ -299,6 +301,6 @@ def display_round_summary(players):
         cash, cards, cards_total, bet = player_info.values()
 
         if cash >= .25:
-            print('$ ', cash, '\t', player_name, '\'s balance')
+            print('$', cash, '\t', player_name, '\'s balance')
         else:
             print(player_name, 'is flat broke.')
