@@ -45,7 +45,7 @@ AUTHOR
 
 import game21 as game
 
-LINE_LENGTH = 28
+LINE_LENGTH = 40
 
 
 def play_game():
@@ -55,15 +55,16 @@ def play_game():
 
     :return: n/a
     """
-
-    while True:
-        game.display_game_intro()
-        players = game.get_players()
+    again = 'y'
+    game.display_game_intro()
+    players = game.get_players()
+    while again == 'y':
         game.play_round(players)
-
-        break
-    print("later skater")
-    input('Press the enter key to continue...')
+        game.display_round_summary(players)
+        print(LINE_LENGTH * '=')
+        again = game.get_yn_input(prompt="\tDo you want to play again? (y/n): ")
+        print(LINE_LENGTH * '=')
+    input('later skater. press any key to continue')
 
 
 if __name__ == "__main__":
